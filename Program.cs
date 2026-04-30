@@ -1,163 +1,64 @@
 using System;
-using System.Collections.Generic;
 
 class Product
 {
     public int Id;
     public string Name;
     public double Price;
-    public int RemainingStock;
+    public int Stock;
 
-    public void DisplayProduct()
-    {
-        Console.WriteLine(Id + ". " + Name + " - ₱" + Price + " (Stock: " + RemainingStock + ")");
-    }
-
-    public bool HasEnoughStock(int quantity)
-    {
-        return quantity <= RemainingStock;
-    }
-
-    public void DeductStock(int quantity)
-    {
-        RemainingStock -= quantity;
-    }
-}
-
-class CartItem
-{
-    public Product Product;
-    public int Quantity;
-
-    public double GetTotal()
-    {
-        return Product.Price * Quantity;
-    }
+    public double GetTotal(int qty) { return Price * qty; }
 }
 
 class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
-        Product[] products = new Product[]
-        {
-            new Product { Id = 1, Name = "Table", Price = 2500, RemainingStock = 60 },
-            new Product { Id = 2, Name = "Chair", Price = 500, RemainingStock = 350 },
-            new Product { Id = 3, Name = "Table Cloth", Price = 200, RemainingStock = 400 }
+        Product[] products = {
+            new Product { Id = 1, Name = "Table", Price = 2500, Stock = 60 },
+            new Product { Id = 2, Name = "Chair", Price = 500, Stock = 350 },
+            new Product { Id = 3, Name = "Table Cloth", Price = 200, Stock = 400 }
         };
 
-        List<CartItem> cart = new List<CartItem>();
-        char choice = 'Y';
+        Product[] cart = new Product[10];
+        int[] qty = new int[10];
+        int cartCount = 0;
 
-        while (choice == 'Y')
+        while (true)
         {
-            Console.WriteLine("\n=== PRODUCT MENU ===");
-            foreach (Product p in products)
-            {
-                p.DisplayProduct();
-            }
+            Console.WriteLine("\n=== STORE MENU ===");
+            for (int i = 0; i < products.Length; i++)
+                Console.WriteLine(products[i].Id + ". " + products[i].Name +
+                    " - ₱" + products[i].Price + " (Stock: " + products[i].Stock + ")");
 
-            Console.Write("\nSelect product (1-3): ");
-            int productChoice;
-            if (!int.TryParse(Console.ReadLine(), out productChoice) ||
-                productChoice < 1 || productChoice > products.Length)
+            Console.Write("Enter product number: ");
+            int choice;
+            if (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > products.Length)
             {
-                Console.WriteLine("Invalid product choice!");
+                Console.WriteLine("Invalid product.");
                 continue;
             }
-
-            Product selected = products[productChoice - 1];
 
             Console.Write("Enter quantity: ");
             int quantity;
             if (!int.TryParse(Console.ReadLine(), out quantity) || quantity <= 0)
             {
-                Console.WriteLine("Invalid quantity!");
+                Console.WriteLine("Invalid quantity.");
                 continue;
             }
 
-            
-            CartItem existingItem = null;
-            foreach (CartItem item in cart)
-            {
-                if (item.Product.Id == selected.Id)
-                {
-                    existingItem = item;
-                    break;
-                }
-            }
+            Product selected = products[choice - 1];
 
-            int totalRequested = quantity;
-            if (existingItem != null)
+            if (quantity > selected.Stock)
             {
-                totalRequested += existingItem.Quantity;
-            }
-
-            if (!selected.HasEnoughStock(totalRequested))
-            {
-                Console.WriteLine("Not enough stock!");
+                Console.WriteLine("Not enough stock.");
                 continue;
             }
 
-            if (existingItem != null)
-            {
-                existingItem.Quantity += quantity;
-            }
-            else
-            {
-                CartItem newItem = new CartItem();
-                newItem.Product = selected;
-                newItem.Quantity = quantity;
-                cart.Add(newItem);
-            }
+            cart[cartCount] = selected;
+            qty[cartCount++] = quantity;
 
-            Console.WriteLine("\nAdded: " + selected.Name + " x" + quantity);
-
-            Console.Write("Add another item? (Y/N): ");
-            choice = Char.ToUpper(Console.ReadKey().KeyChar);
-            Console.WriteLine();
+            Console.WriteLine("Item added to cart.");
         }
-
-        
-        double grandTotal = 0;
-        foreach (CartItem item in cart)
-        {
-            grandTotal += item.GetTotal();
-        }
-
-        
-        Console.WriteLine("\n=== RECEIPT ===");
-        foreach (CartItem item in cart)
-        {
-            Console.WriteLine(item.Product.Name + " x" + item.Quantity + " = ₱" + item.GetTotal());
-        }
-
-        Console.WriteLine("Subtotal: ₱" + grandTotal);
-
-        
-        double discount = 0;
-        if (grandTotal >= 5000)
-        {
-            discount = grandTotal * 0.10;
-            Console.WriteLine("Discount (10%): ₱" + discount);
-        }
-
-        double finalTotal = grandTotal - discount;
-        Console.WriteLine("Final Total: ₱" + finalTotal);
-
-        
-        foreach (CartItem item in cart)
-        {
-            item.Product.DeductStock(item.Quantity);
-        }
-
-        
-        Console.WriteLine("\n=== UPDATED STOCK ===");
-        foreach (Product p in products)
-        {
-            Console.WriteLine(p.Name + " - Remaining: " + p.RemainingStock);
-        }
-
-        Console.WriteLine("\nThank you for your purchase!");
     }
 }
